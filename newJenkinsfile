@@ -1,0 +1,66 @@
+pipeline {
+    agent any
+    environment {
+        registry = "052036832602.dkr.ecr.us-west-1.amazonaws.com/newecr"
+        // Using returnStdout
+        CC = """${sh(
+                returnStdout: true,
+                script: 'echo "clang"'
+            )}""" 
+        // Using returnStatus
+        EXIT_STATUS = """${sh(
+                returnStatus: true,
+                script: 'exit 1'
+            ) }"""
+    }
+    stages {
+        stage('Environment Setup') {
+            environment {
+                DEBUG_FLAGS = '-g'
+            }
+            steps {
+                sh 'printenv'
+            }
+        }
+        stage("Checkout Codebase"){
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/sunilbennur/spring-boot-mongo-docker.git']]])
+            }
+        }
+        stage("Maven clean build") {
+            steps { 
+                script {
+                    def mavenHome = tool name:"Maven-3.8.6", type: "maven"
+                    def mavenCMD = "${mavenHome}/bin/mvn"
+                    sh "${mavenCMD} clean package"
+                }
+            }
+        }
+        stage('Unit Testing') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        stage ('Docker build') {
+            steps {
+                script {
+                    dockerImage = docker.build registry
+                }
+            }
+        } 
+        stage('Pushing image to ECR') {
+            steps{  
+                script {
+                    sh 'aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 052036832602.dkr.ecr.us-west-1.amazonaws.com'
+                    sh 'docker push 052036832602.dkr.ecr.us-west-1.amazonaws.com/newecr:latest'
+                }
+            }
+        }
+        stage("Deploy application into k8s kluster") {
+            steps {
+                sh 'kubectl apply -f springBootMongo.yml'
+            }
+        }
+    }
+    
+}
