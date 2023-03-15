@@ -3,7 +3,7 @@ pipeline {
     agent any
     stages {
 
-        stage('Checkout Codebase'){
+        stage('Git Clone'){
             steps{
                 cleanWs()
                 checkout scm: [$class: 'GitSCM', branches: [[name: '*/main']],userRemoteConfigs:
