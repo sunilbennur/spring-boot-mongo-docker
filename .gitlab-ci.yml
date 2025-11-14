@@ -1,0 +1,22 @@
+stages:
+  - build
+  - test
+  - deploy
+
+build_job:
+  stage: build
+  script:
+    - echo "Building the application..."
+    - ls -l
+
+test_job:
+  stage: test
+  script:
+    - echo "Running tests..."
+    - pytest || true   # example
+
+deploy_job:
+  stage: deploy
+  script:
+    - echo "Deploying..."
+  when: manual
