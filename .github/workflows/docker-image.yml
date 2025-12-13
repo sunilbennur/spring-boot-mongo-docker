@@ -1,33 +1,27 @@
-name: Java CI with Gradle
+name: Simple CI Pipeline
 
 on:
   push:
-    branches: [ "dev" ]
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout source code
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 11
-      uses: actions/setup-java@v3
-      with:
-        java-version: '11'
+      - name: Print a message
+        run: echo "Hello, GitHub Actions!"
 
-    - name: Build with Gradle
-      uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
-      with:
-        arguments: build
-
-- uses: mr-smithers-excellent/docker-build-push@v5
-    name: Build & push Docker image
-    with:
-      image: <repo_name>/<image_name>
-      tags: latest
-      registry: registry-url.io
-      dockerfile: Dockerfile
-      username: ${{ secrets.DOCKER_USERNAME }}
-      password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Run a simple shell command
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "List files:"
+          ls -l
